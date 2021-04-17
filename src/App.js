@@ -1,7 +1,7 @@
 import Header from './components/Layout/Header'
+import Meals from './components/Meals/Meals'
 
 import mealsImage from './assets/meals.jpg';
-
 import './app.css'
 function App() {
   return (
@@ -10,7 +10,9 @@ function App() {
       <div className="main-image">
         <img src={mealsImage} alt="meals"/>
       </div>
-      {/* <Meals/> */}
+      <main>
+        <Meals/>
+      </main>
     </div>
   );
 }
