@@ -28,7 +28,7 @@ const DUMMY_MEALS = [
       name: 'Green Bowl',
       description: 'Healthy...and green...',
       price: 18.99,
-    },
+    }
   ];
 
 const AvailableMeals = () => {

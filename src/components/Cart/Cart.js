@@ -26,11 +26,11 @@ const Cart = () => {
   });
 
   return (
-    <Modal>
+    <Modal onClose={cartCtx.onClose}>
         <ul className={classes['cart-items']}>{cartMealsList}</ul>
         <div className={classes.total}>
             <span>Total Amount</span>
-            <span>{totAmount} €</span>
+            <span>{totAmount.toFixed(2)} €</span>
         </div>
         <div className={classes.actions}>
             <button onClick={cartCtx.onClose} className={classes["button--alt"]}>Close</button>
