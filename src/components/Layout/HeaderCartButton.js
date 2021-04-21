@@ -1,4 +1,4 @@
-import {useContext} from 'react'
+import {useContext, useEffect, useState} from 'react'
 
 import Cart from '../Cart/Cart'
 
@@ -7,11 +7,23 @@ import CartContext from '../../Store/cart-context'
 import classes from './HeaderCartButton.module.css'
 
 const HeaderCartButton = () => {
+    const [animationStatus, setAnimationStatus] = useState(false)
     const cartCtx = useContext(CartContext);
     
+
+    useEffect(() => {
+        setAnimationStatus(true);
+        const animationTimer = setTimeout(() => setAnimationStatus(false), 300);
+
+        return () => {
+            clearTimeout(animationTimer);
+        }
+    }, [cartCtx.value])
+
+    const btnClasses = `${classes.button} ${animationStatus && classes.bump}`
     return (
         <>
-            <button onClick={cartCtx.onOpen} className={classes.button}>
+            <button onClick={cartCtx.onOpen} className={btnClasses}>
                 <span className={classes.icon}>
                 <svg
                 xmlns='http://www.w3.org/2000/svg'
