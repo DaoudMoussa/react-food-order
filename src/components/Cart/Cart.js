@@ -10,9 +10,11 @@ import classes from "./Cart.module.css";
 const Cart = () => {
   const cartCtx = useContext(CartContext);
 
-  let totAmount = 0;
+  const addItemHandler = item => cartCtx.onAddToCart({...item, amount: 1})
+
+  const removeItemHandler = id => cartCtx.onRemove(id)
+
   const cartMealsList = cartCtx.value.map((cartMeal) => {
-    totAmount += cartMeal.price * cartMeal.amount;
     return (
       <CartItem
         amount={cartMeal.amount}
@@ -21,6 +23,8 @@ const Cart = () => {
         price={cartMeal.price}
         name={cartMeal.name}
         description={cartMeal.description}
+        onAdd={addItemHandler.bind(null, cartMeal)}
+        onRemove={removeItemHandler.bind(null, cartMeal.id)}
       />
     );
   });
@@ -30,7 +34,7 @@ const Cart = () => {
         <ul className={classes['cart-items']}>{cartMealsList}</ul>
         <div className={classes.total}>
             <span>Total Amount</span>
-            <span>{totAmount.toFixed(2)} €</span>
+            <span>{cartCtx.totalAmount} €</span>
         </div>
         <div className={classes.actions}>
             <button onClick={cartCtx.onClose} className={classes["button--alt"]}>Close</button>

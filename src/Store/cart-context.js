@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useReducer } from "react";
 
 const CartContext = React.createContext({
   value: [],
@@ -7,103 +7,113 @@ const CartContext = React.createContext({
   onOpen: () => {},
 });
 
-export const CartProvider = (props) => {
-  const [cartList, setCartList] = useState([
-    {
-      id: "m4",
-      name: "Green Bowl",
-      price: 18.99,
-      amount: 2,
-    },
-  ]);
-  const [cartIsActive, setCartIsActive] = useState(false);
-
-  const addToCartHandler = (newCartElement) => {
-
-    const elementIndex = cartList.findIndex(
-      (cartElement) => cartElement.id === newCartElement.id
-    );
-
-    if (elementIndex === -1) setCartList(prevCartList => [ newCartElement, ...prevCartList ]);
-    else {
-
-      setCartList(prevCartList => {
-        const newCartList = [...prevCartList]
-
-        console.log(newCartList[elementIndex].amount + ' + ' + newCartElement.amount);
-
-        let updatedCartElement = {...newCartElement,
-                  amount: prevCartList[elementIndex].amount + newCartElement.amount }
 
 
-        newCartList[elementIndex] = updatedCartElement;
+const cartReducer = (lastCart, action) => {
+  if (action.type === 'ADD') {
+    const newCartItem = action.item;
+    const newTotalAmount = lastCart.totalAmount + (newCartItem.price * newCartItem.amount);
 
-        // newCartList[elementIndex].amount += newCartElement.amount;
-        
-        console.log(newCartList[elementIndex].amount)
+    const itemId = lastCart.list.findIndex(cartItem => cartItem.id === newCartItem.id);
+    const existingCartItem = lastCart.list[itemId];
 
-
-        return newCartList;
-      })
-    }
-  };
-  const openCartHandler = () => {
-    setCartIsActive(true);
-  };
-
-  const closeCartHandler = () => {
-    setCartIsActive(false);
-  };
-
-  const addCopyHandler = (id) => {
-    const cartElementIndex = cartList.findIndex(
-      (cartElement) => cartElement.id === id
-    );
-
-    const newAmount = cartList[cartElementIndex].amount + 1;
-
-    setCartList((prevCartList) => {
-      let newCartList = [...prevCartList];
-
-      newCartList[cartElementIndex].amount = newAmount;
-
-      return newCartList;
-    });
-  };
-
-  const subCopyHandler = (id) => {
-    const cartElementIndex = cartList.findIndex(
-      (cartElement) => cartElement.id === id
-    );
-
-    const newAmount = cartList[cartElementIndex].amount - 1;
-
-    if (newAmount > 0) {
-      setCartList((prevCartList) => {
-        let newCartList = [...prevCartList];
-        newCartList[cartElementIndex].amount = newAmount;
-        return newCartList;
-      });
+    let updatedList;
+    if(existingCartItem) {
+      const updatedItem = {
+        ...existingCartItem,
+        amount: existingCartItem.amount + newCartItem.amount
+      }
+      updatedList = [...lastCart.list];
+      updatedList[itemId] = updatedItem
     } else {
-      setCartList((prevCartList) => prevCartList.splice(cartElementIndex, 1));
+      updatedList = [newCartItem, ...lastCart.list];
     }
-  };
 
-  const buyOrderHandler = () => {
-    console.log("cibo acquistato con successo!");
-    setCartList([]);
-    closeCartHandler();
-  };
+    return {
+      totalAmount: newTotalAmount,
+      list: updatedList,
+      status: lastCart.status
+    };
+  }
+  if (action.type === 'REMOVE') {
+    const itemId = lastCart.list.findIndex(cartItem => cartItem.id === action.id);
+    const cartItem = lastCart.list[itemId];
+
+    const newTotalAmount = lastCart.totalAmount - cartItem.price;
+
+    let updatedList;
+
+    if(cartItem.amount !== 1) {
+      const updatedItem = {...cartItem, amount: cartItem.amount - 1};
+      updatedList = [...lastCart.list];
+      updatedList[itemId] = updatedItem;
+    } else {
+      updatedList = lastCart.list.filter(item => item.id !== action.id)
+    }
+
+    return {
+      totalAmount: newTotalAmount,
+      list: updatedList,
+      status: lastCart.status
+    };
+  }
+  if (action.type === 'OPEN') {
+    return {...lastCart, status: true}
+  } 
+  if (action.type === 'CLOSE') {
+    return {...lastCart, status: false}
+  } 
+  if (action.type === 'ORDER') {
+    console.log('The food is being ordered');
+  }
+
+  return {
+    totalAmount: 0,
+    list: [],
+    status: false
+  }
+}
+
+export const CartProvider = (props) => {
+
+  const [cart, cartDispatch] = useReducer(cartReducer, {
+    totalAmount: 0,
+    list: [],
+    status: false
+  })
+
+  const addToCartHandler = (newCartElement) => cartDispatch({
+    type: 'ADD',
+    item: newCartElement
+  });
+
+  const removeCartHandler = (id) => cartDispatch({
+    type: 'REMOVE',
+    id: id
+  });
+
+  const openCartHandler = () => cartDispatch({
+    type: 'OPEN'
+  });
+
+  const closeCartHandler = () => cartDispatch({
+    type: 'CLOSE'
+  });
+
+  const buyOrderHandler = () => cartDispatch({
+    type: 'ORDER'
+  });
+
   return (
     <CartContext.Provider
       value={{
-        value: cartList,
-        isActive: cartIsActive,
+        value: cart.list,
+        isActive: cart.status,
+        totalAmount: cart.totalAmount,
         onAddToCart: addToCartHandler,
+        onRemove: removeCartHandler,
         onOpen: openCartHandler,
         onClose: closeCartHandler,
-        onAdd: addCopyHandler,
-        onSub: subCopyHandler,
         onOrder: buyOrderHandler,
       }}
     >
